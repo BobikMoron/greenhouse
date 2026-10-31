@@ -1,6 +1,5 @@
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -10,14 +9,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.random.Random
 
-// Модель данных: одно показание датчика
 data class SensorReading(val sensorId: String, val value: Double, val timestamp: Long)
 
-// Сквозной номер, чтобы у каждого показания было своё время
 var counter: Long = 0
 
 fun nextTime(): Long {
@@ -25,18 +21,18 @@ fun nextTime(): Long {
     return counter
 }
 
-// Округление значения до 1 знака после запятой
+
 fun roundOne(value: Double): Double {
     return Math.round(value * 10.0) / 10.0
 }
 
-// Случайное значение в диапазоне, округлённое до 1 знака после запятой
+
 fun randomValue(min: Double, max: Double): Double {
     val value = min + Random.nextDouble() * (max - min)
     return roundOne(value)
 }
 
-// У каждого датчика свой диапазон значений
+
 fun minFor(sensorId: String): Double {
     if (sensorId == "HUM") return 30.0
     if (sensorId == "CO2") return 200.0
@@ -65,32 +61,6 @@ suspend fun emitSensorData(sensorId: String, channel: SendChannel<SensorReading>
 }
 
 
-@Suppress("DEPRECATION_ERROR")
-suspend fun runChannelDemo() = coroutineScope {
-    println("===== 1. КАНАЛ + КОРУТИНЫ =====")
-    println("Запускаем 3 корутины: TEMP, HUM, CO2 (пауза 500 мс)")
-
-    val channel = Channel<SensorReading>()
-
-
-    launch { emitSensorData("TEMP", channel) }
-    launch { emitSensorData("HUM", channel) }
-    launch { emitSensorData("CO2", channel) }
-
-
-    var count = 0
-    while (count < 30) {
-        val msg = channel.receive()
-        println("Получено: " + msg)
-        count = count + 1
-    }
-
-    channel.close()
-    println("Всего получено показаний: " + count)
-    println()
-}
-
-
 fun sensorFlow(sensorId: String): Flow<SensorReading> = flow {
     var i = 1
     while (i <= 10) {
@@ -103,7 +73,7 @@ fun sensorFlow(sensorId: String): Flow<SensorReading> = flow {
     }
 }
 
-// Цепочка обработки: фильтр -> калибровка -> взять 5 -> логирование
+
 fun processedFlow(sensorId: String): Flow<SensorReading> {
     return sensorFlow(sensorId)
         .filter { it.value > 20.0 }
@@ -112,7 +82,7 @@ fun processedFlow(sensorId: String): Flow<SensorReading> {
         .onEach { println("Обработано: " + it) }
 }
 
-// Демонстрация: поток молчит, пока не вызвали toList(), затем fold и среднее
+
 suspend fun runFlowDemo() {
     println("===== 2. FLOW =====")
     println("Создаём поток sensorFlow(\"TEMP\") ...")
