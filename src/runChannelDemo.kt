@@ -4,7 +4,6 @@ import kotlinx.coroutines.launch
 
 @Suppress("DEPRECATION_ERROR")
 suspend fun runChannelDemo() = coroutineScope {
-    println("===== 1. КАНАЛ + КОРУТИНЫ =====")
     println("Запускаем 3 корутины: TEMP, HUM, CO2 (пауза 500 мс)")
 
     val channel = Channel<SensorReading>()
